@@ -92,26 +92,21 @@ class BasicConv2d(nn.Module):
         x = self.bn(x)
         return x
 
-class SE_Block(nn.Module):
-
-   def __init__(self, in_planes, k_size=3):
+class SE_Block(nn.Module):           # Efficient Channel Attention module
+    def __init__(self, in_planes, b=1, gamma=2):
         super(SE_Block, self).__init__()
+        t = int(abs((math.log(in_planes, 2) + b) / gamma))
+        k = t if t % 2 else t + 1
+
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.conv = nn.Conv1d(1, 1, kernel_size=k_size, padding=(k_size - 1) // 2, bias=False)
+        self.conv1 = nn.Conv1d(1, 1, kernel_size=k, padding=int(k/2), bias=False)
         self.sigmoid = nn.Sigmoid()
 
-   def forward(self, x):
-
-
-        # feature descriptor on the global spatial information
-        y = self.avg_pool(x)
-
-        # Two different branches of ECA module
-        y = self.conv(y.squeeze(-1).transpose(-1, -2)).transpose(-1, -2).unsqueeze(-1)
-        # Multi-scale information fusion
-        y = self.sigmoid(y)
-
-        return x * y.expand_as(x)
+    def forward(self, x):
+        x = self.avg_pool(x)
+        x = self.conv1(x.squeeze(-1).transpose(-1, -2)).transpose(-1, -2).unsqueeze(-1)
+        out = self.sigmoid(x)
+        return out
 
 
 
