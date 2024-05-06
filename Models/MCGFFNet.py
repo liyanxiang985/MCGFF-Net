@@ -363,9 +363,3 @@ class MCGFF(nn.Module):
         logits = self.out_conv(x)
 
         return logits
-
-if __name__ == '__main__':
-    image = torch.randn(3, 3, 352, 352).cuda()
-    model = MCGFF(in_channels=3, num_classes=1).cuda()
-    output = model(image)
-    print(output.shape)
